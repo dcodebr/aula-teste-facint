@@ -25,22 +25,22 @@ jobs:
       - name: Checkout Main Repository
         uses: actions/checkout@v3
 
-      # 2. Checkout do repositorio dcodebr/sisweb-facint
-      - name: Checkout Repository dcodebr/sisweb-facint
+      # 2. Checkout de outro repositório
+      - name: Checkout External Repository
         uses: actions/checkout@v3
         with:
           repository: dcodebr/sisweb-facint
           token: ${{ secrets.GITHUB_TOKEN }}
           path: external-repo
 
-      # 3. Instalar .NET
-      - name: Install dotnet
+      # 3. Instala .NET
+      - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'
 
-      # 4. Restaurar as dependencias
-      - name: Restaurar dependencias
+      # 4. Restaura dependências
+      - name: Restore dependencies
         run: dotnet restore
 
       # 5. Compilar aplicação
