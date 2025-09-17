@@ -1,0 +1,80 @@
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: Projeto de Testes .NET com Selenium
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+    inputs:
+      runSeleniumTests:
+        description: 'Executar testes manualmente?'
+        required: false
+        default: 'true'
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout do repositório atual
+      - name: Checkout Main Repository
+        uses: actions/checkout@v3
+
+      # 2. Checkout do repositorio dcodebr/sisweb-facint
+      - name: Checkout Repository dcodebr/sisweb-facint
+        uses: actions/checkout@v3
+        with:
+          repository: dcodebr/sisweb-facint
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: external-repo
+
+      # 3. Instalar .NET
+      - name: Install dotnet
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+
+      # 4. Restaurar as dependencias
+      - name: Restaurar dependencias
+        run: dotnet restore
+
+      # 5. Compilar aplicação
+      - name: Build application
+        run: dotnet build --configuration Release --no-restore
+
+      # 6. Public para a pasta de saída:
+      - name: Publicar projeto
+        run: dotnet publish -c Release -o ./publish
+
+      # 7. Instala o Node.JS
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      # 8. Install http-server
+      - name: Install http-server
+        run: npm install -g http-server
+
+      # 9. Executar http-server
+      - name: Executar http-server
+        run: |
+          nohup http-server ./external-repo -p 8080 &
+          sleep 5
+
+      # 10. Executa os testes do selenium
+      - name: Executar testes do selenium em .NET
+        run: dotnet test --logger "trx;LogFileName=test_results.trx"
+
+      # 11. Publica resultados do test
+      - name: Publicando resultados do teste
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: '**/TestResults/*.trx'
+        
